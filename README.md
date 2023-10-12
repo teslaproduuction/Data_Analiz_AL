@@ -1,4 +1,4 @@
-# Data_Analiz_AL
+![Aboba-team](https://github.com/teslaproduuction/Data_Analiz_AL/assets/117762137/bfc8a26b-c957-4d81-8521-e3f8872ec13f)![Aboba-team (1)](https://github.com/teslaproduuction/Data_Analiz_AL/assets/117762137/71d60700-9da1-4204-9e97-7854d5fdf5fc)# Data_Analiz_AL
 # Прогнозирование курса алюминия с использованием модели ARIMAX
 
 **Обзор проекта**
@@ -6,3 +6,6 @@
 
  **Цель проекта**
 Основная цель проекта - разработать модель ARIMAX, которая позволит прогнозировать курс алюминия на основе имеющихся данных о временном ряде, а также учитывать внешние факторы, представленные в экзогенных переменных. Модель должна быть способной предсказывать будущие значения курса алюминия с высокой точностью и эффективностью.
+
+![Aboba-team](https://github.com/teslaproduuction/Data_Analiz_AL/assets/117762137/7b010890-11b3-4149-9c51-6c1fa0e5dad1)
+![Aboba-team (1)](https://github.com/teslaproduuction/Data_Analiz_AL/assets/117762137/5502b17d-5228-4ca1-b52a-77fe2d99c7d2)
