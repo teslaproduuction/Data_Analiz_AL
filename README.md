@@ -1,4 +1,4 @@
-![Aboba-team](https://github.com/teslaproduuction/Data_Analiz_AL/assets/117762137/bfc8a26b-c957-4d81-8521-e3f8872ec13f)![Aboba-team (1)](https://github.com/teslaproduuction/Data_Analiz_AL/assets/117762137/71d60700-9da1-4204-9e97-7854d5fdf5fc)# Data_Analiz_AL
+# Data_Analiz_AL
 # Прогнозирование курса алюминия с использованием модели ARIMAX
 
 **Обзор проекта**
