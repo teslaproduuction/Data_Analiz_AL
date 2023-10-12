@@ -1,0 +1,1069 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% csrf_token %}
+    <meta charset="UTF-8">
+    <title>Aboba team</title>
+    <meta name="description" content="">
+    <meta name="keywords"
+          content="	advisor, analytical, audit, broker, brokerage, business, company, consulting, currency, exchange, finance, financial, insurance, modern, trader">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/font.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/swiper.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'assets/images/fav.png' %}"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@mapbox/mapbox-sdk/umd/mapbox-sdk.min.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.16.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@1.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-trendline"></script>
+    <script src=https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.js></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+</head>
+<style>
+    .text {
+        font-size: 16px;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    #map {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+</style>
+
+<body style="background-color: #b8c6db;
+background-image: linear-gradient(270deg, #b8c6db 0%, #f5f7fa 74%);" onload="toggleChart('Graph1')">
+<div class="container-fluid sticky-top border border-dark" style="height: 90px; background-color: white">
+    <div class="row align-items-center">
+        <div class="col-2">
+            <div class="me-logo" style="object-fit: cover; max-height: 100%">
+                <a href="{% url 'index' %}"><img src="{% static 'assets/images/global-aluminium.png' %}" alt="logo"
+                                                 class="img-fluid"/></a>
+            </div>
+
+        </div>
+        <div class="col-6">
+            <h2 style="text-align: center">АНАЛИЗ И ПРОГНОЗИРОВАНИЕ ВРЕМЕННЫХ РЯДОВ</h2>
+        </div>
+        <div class="col-4">
+            <div class="row justify-content-end">
+                <div class="col-4">
+                    <button id="download-button" class="btn btn-outline-dark"
+                            style="margin-bottom: 10px;">Скачать данные
+                    </button>
+                </div>
+                <div class="col-4">
+                    <button id="print-button" class="btn btn-outline-dark" style="margin-bottom: 10px;">Сохранить
+                        как PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script>
+            // Получаем ссылку на кнопку
+            const printButton = document.getElementById('print-button');
+
+            // Назначаем обработчик событий при клике на кнопку
+            printButton.addEventListener('click', function () {
+                // Вызываем функцию print()
+                window.print();
+            });
+        </script>
+    </div>
+</div>
+
+<div class="container-fluid" style="margin-top: 3rem" id="main">
+    <div class="row justify-content-evenly">
+        <div class="col-9">
+            <div class="row justify-content-between border-dark border-2 my-3" style="margin-right: 5px">
+                <div class="col-5 border border-dark border-2 rounded" style="margin-bottom: 5px">
+                    <h3>Расчет показателей</h3>
+                    <p class="text">Средний уровень ряда: <b>{{ average_level }}</b></p>
+                    <p class="text">Среднее значение за полугодия: <b>{{ y1 }}</b>, <b>{{ y2 }}</b></p>
+                    <p class="text">Среднее значение дисперсии за полугодия: <b>{{ sigma1 }}</b>, <b>{{ sigma2 }}</b>
+                    </p>
+                    <p class="text">F-критерий Фишера: <b>{{ F }}</b></p>
+                    <p class="text">Табличное значение F-критерия: <b>{{ F_tabl }}</b></p>
+                    <p class="text">t-критерий Стьюдента: <b>{{ t_stat }}</b></p>
+                    <p class="text">Табличное значение t-критерия: <b>{{ t_tabl }}</b></p>
+                    <p class="text">Гипотеза о стационарности ряда : <b>{{ gipoteza }}</b></p>
+                    <p class="text">Точность : <b>{{ alfa }}</b></p>
+{#                    {% if best_model == 'linear' %}#}
+{#                        <p class="text">Линейная функция: <b>{{ yr_linear }}</b></p>#}
+{#                    {% elif best_model == 'exponential' %}#}
+{#                        <p class="text">Экспоненциальная функция: <b>{{ yr_exponential }}</b></p>#}
+{#                    {% elif best_model == 'hyperbolic' %}#}
+{#                        <p class="text">Гиперболическая функция: <b>{{ yr_hyperbolic }}</b></p>#}
+{#                    {% endif %}#}
+                    <p>Текущая цена: <b>{{ price }}$</b></p>
+                    <a class="btn btn-outline-dark" href="{{ url }}" target="_blank"
+                       style="margin-bottom: 5px; width: 100%">Вывести курс алюминия на табло</a>
+                </div>
+
+                <div class="col-6 border border-dark border-2 rounded" style="margin-bottom: 5px;">
+                    <h3>Актуальные цены на алюминий</h3>
+                    <canvas id="canvasIdAL" style="width: 100%; height: 100%;"></canvas>
+                </div>
+            </div>
+            <div class="row justify-content-between">
+                <div class="col-3">
+                    <h2>Построение графиков</h2>
+                </div>
+                <div class="col-9">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-dark" onclick="toggleChart('Graph1')">Исходный ряд
+                            и скользящие средние
+                        </button>
+                        <button type="button" class="btn btn-outline-dark" onclick="toggleChart('Graph5')">
+                            Прогнозирование
+                        </button>
+                        {% if best_model == 'linear' %}
+                            <button type="button" class="btn btn-outline-dark" onclick="toggleChart('Graph2')">Линейный
+                                тренд
+                            </button>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-dark dropdown-toggle"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Дополнительные тренды
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="toggleChart('Graph3')">Экспоненциальный тренд</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="toggleChart('Graph4')">Гиперболический тренд</a></li>
+                                </ul>
+                            </div>
+                        {% elif best_model == 'exponential' %}
+                            <button type="button" class="btn btn-outline-dark" onclick="toggleChart('Graph3')">
+                                Экспоненциальный тренд
+                            </button>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-dark dropdown-toggle"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Дополнительные тренды
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="toggleChart('Graph2')">Линейный тренд</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="toggleChart('Graph4')">Гиперболический тренд</a></li>
+                                </ul>
+                            </div>
+                        {% elif best_model == 'hyperbolic' %}
+                            <button type="button" class="btn btn-outline-dark" onclick="toggleChart('Graph4')">
+                                Гиперболический тренд
+                            </button>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-dark dropdown-toggle"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    Дополнительные тренды
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="toggleChart('Graph2')">Линейный тренд</a></li>
+                                    <li><a class="dropdown-item" href="javascript:void(0)"
+                                           onclick="toggleChart('Graph3')">Экспоненциальный тренд</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="container border border-dark border-2 rounded my-2" style="min-height: 650px;">
+                <h3 id="GraphTitle"></h3>
+                <canvas id="Graph"></canvas>
+                <div id="block1" style="display: none;">
+                    {{ ma3|safe }}
+                    <div class="container">
+                        <p>
+                            ma3 - это список пар (месяц, скользящая средняя) для окна размером 3. Это означает, что
+                            для
+                            каждого месяц (начиная с третьего) скользящая средняя рассчитывается как среднее
+                            значение
+                            за этот месяц и два предыдущих месяца.
+                        </p>
+                        <p>
+                            ma4_no_center - это список пар (месяц, скользящая средняя) для окна размером 4 без
+                            центрирования.
+                            Это означает, что для каждого месяца (начиная с четвертого) скользящая средняя
+                            рассчитывается
+                            как
+                            среднее значение за этот месяц и три предыдущих месяца.
+                        </p>
+                        <p>
+                            ma4_center - это список пар (месяц, скользящая средняя) для окна размером 4 с
+                            центрированием.
+                            Это
+                            означает, что для каждого месяц (начиная со второго и заканчивая предпоследним)
+                            скользящая
+                            средняя рассчитывается как среднее значение за два месяца: этот месяц, предыдущий
+                            месяц, следующий месяц и месяц после следующего месяц.
+                        </p>
+                    </div>
+                </div>
+                <div class="row justify-content-center" style="margin-top: 10px; margin-bottom: 10px; display: none"
+                     id="cont1">
+                    <div class="col-6 offset-3">
+                        <button onclick="toggleBlock('block1')" id="base1" class="btn btn-outline-dark"
+                                style="width: 100%">
+                            Показать\скрыть данные
+                        </button>
+                    </div>
+
+                </div>
+                <div id="block2" style="display: none;">
+                    {{ linear_trend_data|safe }}
+                </div>
+                <div class="row justify-content-center" style="margin-top: 10px; margin-bottom: 10px; display: none"
+                     id="cont2">
+                    <div class="col-6 offset-3">
+                        <button onclick="toggleBlock('block2')" class="btn btn-outline-dark" style="width: 100%">
+                            Показать\скрыть данные
+                        </button>
+                    </div>
+                </div>
+                <div id="block3" style="display: none;">
+                    {{ exponential_trend_data|safe }}
+                </div>
+                <div class="row justify-content-center" style="margin-top: 10px; margin-bottom: 10px; display: none"
+                     id="cont3">
+                    <div class="col-6 offset-3">
+                        <button onclick="toggleBlock('block3')" class="btn btn-outline-dark" style="width: 100%">
+                            Показать\скрыть данные
+                        </button>
+                    </div>
+                </div>
+                <div id="block4" style="display: none;">
+                    {{ hyperbolic_trend_data|safe }}
+                </div>
+                <div class="row justify-content-center" style="margin-top: 10px; margin-bottom: 10px; display: none"
+                     id="cont4">
+                    <div class="col-6 offset-3">
+                        <button onclick="toggleBlock('block4')" class="btn btn-outline-dark" style="width: 100%">
+                            Показать\скрыть данные
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-2 g-2">
+            <div style="overflow:auto; max-height: 1300px">
+                {% for item in news %}
+                    <img src="{{ item.image }}" alt="{{ item.title }}" class="card-img-top"
+                         data-bs-toggle="collapse" href="#collapseExample{{ forloop.counter0 }}"
+                         role="button" aria-expanded="false" aria-controls="collapseExample{{ forloop.counter0 }}"
+                         style="margin-top: 10px">
+                    <div class="collapse" id="collapseExample{{ forloop.counter0 }}" style="margin-bottom: 10px">
+                        <div class="card border border-dark border-1" style="margin-bottom: 10px;">
+                            <div class="card-body">
+                                <h5 class="card-title"><a style="font-size: medium; color: blue;"
+                                                          href="{{ item.link }}">{{ item.title }}</a></h5>
+                                <p>{{ item.description }}</p>
+                                <a href="{{ item.link }}" class="btn btn-outline-dark">Читать далее...</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div id="block5" style="display: none; font-size: 12px">
+                {{ df|safe }}
+            </div>
+        </div>
+        <div class="row justify-content-evenly" style="margin-top: 10px; margin-bottom: 10px;">
+            <div class="col-9">
+                <button onclick="toggleBlock('block5')" class="btn btn-outline-dark" style="width: 100%">Показать\скрыть
+                    все данные
+                </button>
+            </div>
+            <div class="col-2">
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+<script>
+    let block1 = document.getElementById("block1");
+    let block2 = document.getElementById("block2");
+    let block3 = document.getElementById("block3");
+    let block4 = document.getElementById("block4");
+    let cont1 = document.getElementById("cont1");
+    let cont2 = document.getElementById("cont2");
+    let cont3 = document.getElementById("cont3");
+    let cont4 = document.getElementById("cont4");
+    let ma3_data = JSON.parse('{{ ma3_data|escapejs }}');
+    let ma4_no_center_data = JSON.parse('{{ ma4_no_center_data|escapejs }}');
+    let ma4_center_data = JSON.parse('{{ ma4_center_data|escapejs }}');
+    let date = JSON.parse('{{ data|escapejs }}');
+    let exponential_trend = JSON.parse('{{ exponential_trend|escapejs }}');
+    let linear_trend = JSON.parse('{{ linear_trend|escapejs }}');
+    let hyperbolic_trend = JSON.parse('{{ hyperbolic_trend|escapejs }}');
+    let test_set_data = JSON.parse('{{ test_set_data|escapejs }}');
+    let future_df_data = JSON.parse('{{ forecast_json|escapejs }}');
+    console.log(exponential_trend, hyperbolic_trend);
+    let chart = null;
+    let id = null;
+
+    function toggleChart(name) {
+        let canvas = document.getElementById("Graph");
+        let title = document.getElementById("GraphTitle");
+        let ctx = canvas.getContext("2d");
+        let xData0 = date.map(row => new Date(row.Date).toISOString().slice(0, 10));
+        let yData0 = date.map(row => row.Value);
+        if (chart === null) {
+            console.log(canvas.id);
+            console.log(id);
+            switch (name) {
+                case "Graph1":
+                    let xData1 = ma3_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yData1 = ma3_data.map(row => row.Average);
+
+                    let xData2 = ma4_no_center_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yData2 = ma4_no_center_data.map(row => row.Average);
+
+                    let xData3 = ma4_center_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yData3 = ma4_center_data.map(row => row.Average);
+                    chart = createLineChart_4param(ctx, xData0, yData0, xData1, yData1, xData2, yData2, xData3, yData3);
+                    id = name;
+                    title.textContent = 'Исходный ряд и скользящие средние';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "block";
+                    cont2.style.display = "none";
+                    cont3.style.display = "none";
+                    cont4.style.display = "none";
+                    break;
+                case "Graph2":
+                    let xLinear_trend = linear_trend.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yLinear_trend = linear_trend.map(row => row.linear_trend);
+                    chart = createLineChart_2param(ctx, xData0, yData0, xLinear_trend, yLinear_trend, 'Линейный тренд');
+                    id = name;
+                    title.textContent = 'Линейный тренд';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "block";
+                    cont3.style.display = "none";
+                    cont4.style.display = "none";
+                    break;
+                case "Graph3":
+                    let xExponential_trend = exponential_trend.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yExponential_trend = exponential_trend.map(row => row.exponential_trend);
+                    chart = createLineChart_2param(ctx, xData0, yData0, xExponential_trend, yExponential_trend, 'Экспоненциальный тренд');
+                    id = name;
+                    title.textContent = 'Экспоненциальный тренд';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "none";
+                    cont3.style.display = "block";
+                    cont4.style.display = "none";
+                    break;
+                case "Graph4":
+                    let xHyperbolic_trend = hyperbolic_trend.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yHyperbolic_trend = hyperbolic_trend.map(row => row.hyperbolic_trend);
+                    chart = createLineChart_2param(ctx, xData0, yData0, xHyperbolic_trend, yHyperbolic_trend, 'Гиперболический тренд');
+                    id = name;
+                    title.textContent = 'Гиперболический тренд';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "none";
+                    cont3.style.display = "none";
+                    cont4.style.display = "block";
+                    break;
+                case "Graph5":
+                    let xTest_set_data = test_set_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yTest_set_data = test_set_data.map(row => row.Predictions);
+
+                    let xFuture_df_data = future_df_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yFuture_df_data = future_df_data.map(row => row.Value);
+
+                    chart = createLineChart_3param(ctx, xData0, yData0, xTest_set_data, yTest_set_data, xFuture_df_data, yFuture_df_data, 'Тестовые данные', 'Прогноз');
+                    id = name;
+                    title.textContent = 'Прогнозирование';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "none";
+                    cont3.style.display = "none";
+                    cont4.style.display = "none";
+                    break;
+            }
+
+        } else {
+            // Удаляем график
+            chart.destroy();
+            chart = null;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            switch (name) {
+                case "Graph1":
+                    let xData1 = ma3_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yData1 = ma3_data.map(row => row.Average);
+
+                    let xData2 = ma4_no_center_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yData2 = ma4_no_center_data.map(row => row.Average);
+
+                    let xData3 = ma4_center_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yData3 = ma4_center_data.map(row => row.Average);
+                    chart = createLineChart_4param(ctx, xData0, yData0, xData1, yData1, xData2, yData2, xData3, yData3);
+                    id = name;
+                    title.textContent = 'Исходный ряд и скользящие средние';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "block";
+                    cont2.style.display = "none";
+                    cont3.style.display = "none";
+                    cont4.style.display = "none";
+                    console.log(container);
+                    break;
+                case "Graph2":
+                    let xLinear_trend = linear_trend.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yLinear_trend = linear_trend.map(row => row.linear_trend);
+                    chart = createLineChart_2param(ctx, xData0, yData0, xLinear_trend, yLinear_trend, 'Линейный тренд');
+                    id = name;
+                    title.textContent = 'Линейный тренд';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "block";
+                    cont3.style.display = "none";
+                    cont4.style.display = "none";
+                    break;
+                case "Graph3":
+                    let xExponential_trend = exponential_trend.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yExponential_trend = exponential_trend.map(row => row.exponential_trend);
+                    chart = createLineChart_2param(ctx, xData0, yData0, xExponential_trend, yExponential_trend, 'Экспоненциальный тренд');
+                    id = name;
+                    title.textContent = 'Экспоненциальный тренд';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "none";
+                    cont3.style.display = "block";
+                    cont4.style.display = "none";
+                    break;
+                case "Graph4":
+                    let xHyperbolic_trend = hyperbolic_trend.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yHyperbolic_trend = hyperbolic_trend.map(row => row.hyperbolic_trend);
+                    chart = createLineChart_2param(ctx, xData0, yData0, xHyperbolic_trend, yHyperbolic_trend, 'Гиперболический тренд');
+                    id = name;
+                    title.textContent = 'Гиперболический тренд';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "none";
+                    cont3.style.display = "none";
+                    cont4.style.display = "block";
+                    break;
+                case "Graph5":
+                    let xTest_set_data = test_set_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yTest_set_data = test_set_data.map(row => row.Predictions);
+
+                    let xFuture_df_data = future_df_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+                    let yFuture_df_data = future_df_data.map(row => row.Value);
+
+                    chart = createLineChart_3param(ctx, xData0, yData0, xTest_set_data, yTest_set_data, xFuture_df_data, yFuture_df_data, 'Тестовые данные', 'Прогноз');
+                    id = name;
+                    title.textContent = 'Прогнозирование';
+                    block1.style.display = "none";
+                    block2.style.display = "none";
+                    block3.style.display = "none";
+                    block4.style.display = "none";
+                    cont1.style.display = "none";
+                    cont2.style.display = "none";
+                    cont3.style.display = "none";
+                    cont4.style.display = "none";
+                    break;
+            }
+        }
+
+    }
+
+
+    function toggleBlock(blockId) {
+        var block = document.getElementById(blockId);
+        if (block.style.display === "none") {
+            block.style.display = "block";
+        } else {
+            block.style.display = "none";
+        }
+    }
+
+    document.getElementById('download-button').addEventListener('click', function () {
+        window.location.href = '/download/';
+    });
+
+    // Получение контекста для рисования
+    let canvasAL = window.document.getElementById('canvasIdAL');
+    let contextAL = canvasAL.getContext('2d');
+    // Функции
+    const createLineChart_4param = (context, xData0, yData0, xData1, yData1, xData2, yData2, xData3, yData3) => {
+        let xData = Array.from(new Set([...xData0, ...xData1, ...xData2, ...xData3]));
+        let data = {
+            labels: xData,
+            datasets: [
+                {
+                    label: 'Исходный ряд',
+                    data: yData0,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#ff0000',
+                    backgroundColor: '#ff7070',
+                    pointRadius: 1
+                },
+                {
+                    label: 'Скользящая средняя (окно 3)',
+                    data: yData1,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    pointRadius: 1,
+                    backgroundColor: '#ffc671',
+                    borderColor: '#ff8000'
+                },
+                {
+                    label: 'Скользящая средняя (окно 4, без центрирования)',
+                    data: yData2,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    backgroundColor: '#c6ff71',
+                    borderColor: '#00ff12',
+                    pointRadius: 1
+                },
+                {
+                    label: 'Скользящая средняя (окно 4, с центрированием)',
+                    data: yData3,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#0022ff',
+                    backgroundColor: '#71c6ff',
+                    pointRadius: 1
+                }]
+        }
+        let options = {
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,  // Включение зума при использовании колеса мыши
+                        },
+                        pinch: {
+                            enabled: true,  // Включение зума при использовании мультитач-жестов
+                        },
+                        mode: 'xy',  // Включение зума по осям X и Y
+                    },
+                    pan: {
+                        enabled: true,  // Включение панорамирования
+                        mode: 'xy',  // Включение панорамирования по осям X и Y
+                    },
+                    limits: {
+                        x: {  // Ограничение по оси X
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                        y: {  // Ограничение по оси Y
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                    },
+                },
+
+
+            },
+
+
+            title: {
+                display: true,
+                text: 'Скользящие средние',
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                }
+            }
+        }
+
+        let config = {
+            type: 'line',
+            data: data,
+            options: options
+        }
+
+        return new Chart(context, config);
+
+    }
+    const createLineChart_3param = (context, xData0, yData0, xData1, yData1, xData2, yData2, title1, title2) => {
+        let data = {
+            datasets: [
+                {
+                    label: 'Исходный ряд',
+                    data: xData0.map((x, i) => ({x: x, y: yData0[i]})),
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#ff0000',
+                    backgroundColor: '#ff7070',
+                    pointRadius: 1
+                },
+                {
+                    label: title1,
+                    data: xData1.map((x, i) => ({x: x, y: yData1[i]})),
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    pointRadius: 1,
+                    backgroundColor: '#ffc671',
+                    borderColor: '#ff8000'
+                },
+                {
+                    label: title2,
+                    data: xData2.map((x, i) => ({x: x, y: yData2[i]})),
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    backgroundColor: '#c6ff71',
+                    borderColor: '#00ff12',
+                    pointRadius: 1
+                }]
+        }
+        let options = {
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,  // Включение зума при использовании колеса мыши
+                        },
+                        pinch: {
+                            enabled: true,  // Включение зума при использовании мультитач-жестов
+                        },
+                        mode: 'xy',  // Включение зума по осям X и Y
+                    },
+                    pan: {
+                        enabled: true,  // Включение панорамирования
+                        mode: 'xy',  // Включение панорамирования по осям X и Y
+                    },
+                    limits: {
+                        x: {
+                            // Ограничение по оси X
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                        y: {
+                            // Ограничение по оси Y
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                    },
+                },
+            },
+
+
+            title: {
+                display: true,
+                text: 'Скользящие средние'
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                }
+            }
+        }
+
+        let config = {
+            type: 'line',
+            data: data,
+            options: options
+
+        }
+
+        return new Chart(context, config);
+
+    }
+    const createLineChart_2param = (context, xData0, yData0, xData1, yData1, title) => {
+        let xData = Array.from(new Set([...xData0, ...xData1]));
+        let data = {
+            labels: xData,
+            datasets: [
+                {
+                    label: 'Исходный ряд',
+                    data: yData0,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#ff0000',
+                    backgroundColor: '#ff7070',
+                    pointRadius: 1
+                },
+                {
+                    label: title,
+                    data: yData1,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    pointRadius: 1,
+                    backgroundColor: '#c6ff71',
+                    borderColor: '#00ff12',
+                },
+            ]
+        }
+        let options = {
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,  // Включение зума при использовании колеса мыши
+                        },
+                        pinch: {
+                            enabled: true,  // Включение зума при использовании мультитач-жестов
+                        },
+                        mode: 'xy',  // Включение зума по осям X и Y
+                    },
+                    pan: {
+                        enabled: true,  // Включение панорамирования
+                        mode: 'xy',  // Включение панорамирования по осям X и Y
+                    },
+                    limits: {
+                        x: {  // Ограничение по оси X
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                        y: {  // Ограничение по оси Y
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                    },
+                },
+            },
+
+
+            title: {
+                display: true,
+                text: 'Скользящие средние'
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                }
+            }
+        }
+
+        let config = {
+            type: 'line',
+            data: data,
+            options: options
+        }
+
+        return new Chart(context, config);
+
+    }
+    const createLineChart_1param = (context, xData0, yData0) => {
+        let xData = Array.from(new Set([...xData0]));
+        let data = {
+            labels: xData,
+            datasets: [
+                {
+                    label: 'Курс Алюминия',
+                    data: yData0,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#ff0000',
+                    backgroundColor: '#ff7070',
+                    pointRadius: 1
+                },
+
+            ]
+        }
+        let options = {
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,  // Включение зума при использовании колеса мыши
+                        },
+                        pinch: {
+                            enabled: true,  // Включение зума при использовании мультитач-жестов
+                        },
+                        mode: 'xy',  // Включение зума по осям X и Y
+                    },
+                    pan: {
+                        enabled: true,  // Включение панорамирования
+                        mode: 'xy',  // Включение панорамирования по осям X и Y
+                    },
+                    limits: {
+                        x: {  // Ограничение по оси X
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                        y: {  // Ограничение по оси Y
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                    },
+                },
+            },
+
+
+            title: {
+                display: true,
+                text: 'База'
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                }
+            }
+        }
+
+        let config = {
+            type: 'line',
+            data: data,
+            options: options
+        }
+
+        return new Chart(context, config);
+
+    }
+    // Использование данных из Django
+    let chart_data = JSON.parse('{{ charts_data|escapejs }}');
+
+
+    let xData = chart_data.map(row => new Date(row.Date).toISOString().slice(0, 10));
+    let yData = chart_data.map(row => row.Close);
+    createLineChart_1param(contextAL, xData, yData);
+
+    function generatePDF() {
+        const element = document.getElementById('main');
+        html2pdf()
+            .from(element)
+            .save()
+    }
+
+
+</script>
+
+
+<!-- Footer -->
+<div class="me-footer" style="padding: 50px 0 50px 0;">
+    <div class="container-fluid" style="margin-top: 10px; margin-bottom: 30px;">
+        <div class="row justify-content-between">
+            <div class="col-10 offset-2">
+                <div class="row">
+                    <div class="col-2">
+                        <div class="container">
+                            <a href="{% url 'index' %}"><img src="{% static 'assets/images/director.jpg' %}"
+                                                             style="object-fit: fill; max-width: 100%; max-height: 250px;"/></a>
+                        </div>
+                    </div>
+                    <div class="col-6 border border-dark border-1">
+                        <h4>Связаться с нами</h4>
+                        <ul class="list-group-flush">
+                            <li class="list-group-item"><b>Адрес:</b> 150023, г. Ярославль, Московский пр., д. 88.
+                                Аудитория Г-501
+                            </li>
+                        </ul>
+                        <ul class="list-group-flush">
+                            <li class="list-group-item"><b>Рабочая почта:</b> skam@moneyexchange.com</li>
+                            <li class="list-group-item"><b>Рабочий телефон:</b> 8 (906) 526-7321</li>
+                        </ul>
+                        <ul class="list-group-flush">
+                            <li class="list-group-item"><b>Наши социальные сети и мессенджеры</b></li>
+                        </ul>
+                        <ul class="list-group list-group-horizontal">
+                            <li class="list-group-item" style="margin-bottom: 5px"><a
+                                    href="https://discord.gg/xDNB32aUQW"><i class="fab fa-discord"></i></a></li>
+                            <li class="list-group-item" style="margin-bottom: 5px"><a
+                                    href="https://t.me/YaroslavlSTU"><i class="fab fa-telegram"></i></a></li>
+                            <li class="list-group-item" style="margin-bottom: 5px"><a href="https://vk.com/ystu"><i
+                                    class="fab fa-vk"></i></a></li>
+                        </ul>
+                    </div>
+                    <div class="col-2">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="me-footer-copyright" style="margin-bottom: 0px">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="me-copyright-block">
+                        <p>&copy; 2023 copyright all right reserved by <a href="https://pravo.ru/process/view/142944/">AbobaTeam</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="me-copyright-block">
+                        <ul>
+                            <li>
+                                <a href="https://www.youtube.com/watch?v=yB1TRff_U0Q&ab_channel=%D0%A1%D1%82%D0%B0%D1%80%D1%83%D1%85%D0%B0%D0%9C%D1%85%D0%B0">Base</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div id="me-rate">
+            <p>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+                <span>НА ТЕКУЩИЙ МОМЕНТ СТОИМОСТЬ АЛЮМИНИЯ {{ price }}$</span>
+            </p>
+        </div>
+    </div>
+</div>
+<!-- Rate -->
+
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'assets/js/swiper.min.js' %}"></script>
+<script src="{% static 'assets/js/SmoothScroll.min.js' %}"></script>
+<script src="{% static 'assets/js/ui_range_slider.js' %}"></script>
+<script src="{% static 'assets/js/canvasjs.js' %}"></script>
+<script src="{% static 'assets/js/custom.js' %}"></script>
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoidGVzbGExMjMiLCJhIjoiY2xiYjhmOGJ3MDJhZjNucGUxZDFla3d3ZyJ9.H67vwQmM2BhMO9dM5Ms7ew';
+    const mapboxClient = mapboxSdk({accessToken: mapboxgl.accessToken});
+    mapboxClient.geocoding
+        .forwardGeocode({
+            query: 'Россия, Ярославль, Московский проспект, 88',
+            autocomplete: false,
+            limit: 1
+        })
+        .send()
+        .then((response) => {
+            if (
+                !response ||
+                !response.body ||
+                !response.body.features ||
+                !response.body.features.length
+            ) {
+                console.error('Invalid response:');
+                console.error(response);
+                return;
+            }
+            const feature = response.body.features[0];
+
+            const map = new mapboxgl.Map({
+                container: 'map',
+                // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: feature.center,
+                zoom: 15
+            });
+
+            // Create a marker and add it to the map.
+            new mapboxgl.Marker().setLngLat(feature.center).addTo(map);
+        });
+</script>
+</body>
+</html>
+
+

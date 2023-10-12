@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Пример графика Chart.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <button onclick="toggleChart()">Показать/Скрыть график</button>
+  <canvas id="myChart"></canvas>
+
+  <script>
+    var chart = null; // Переменная для хранения экземпляра графика
+
+    function toggleChart() {
+      var canvas = document.getElementById("myChart");
+      var ctx = canvas.getContext("2d");
+
+      if (chart === null) {
+        // Создаем данные для графика
+        var xData0 = [1, 2, 3, 4, 5];
+        var yData0 = [10, 20, 30, 40, 50];
+        var xData1 = [1, 2, 3, 4, 5];
+        var yData1 = [15, 25, 35, 45, 55];
+        var xData2 = [1, 2, 3, 4, 5];
+        var yData2 = [12, 22, 32, 42, 52];
+        var xData3 = [1, 2, 3, 4, 5];
+        var yData3 = [18, 28, 38, 48, 58];
+
+        // Создаем график
+        chart = createLineChart_4param(ctx, xData0, yData0, xData1, yData1, xData2, yData2, xData3, yData3);
+      } else {
+        // Удаляем график
+        chart.destroy();
+        chart = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // Функция для создания графика
+    const createLineChart_4param = (context, xData0, yData0, xData1, yData1, xData2, yData2, xData3, yData3) => {
+        let xData = Array.from(new Set([...xData0, ...xData1, ...xData2, ...xData3]));
+        let data = {
+            labels: xData,
+            datasets: [
+                {
+                    label: 'Исходный ряд',
+                    data: yData0,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#ff0000',
+                    backgroundColor: '#ff7070',
+                    pointRadius: 1
+                },
+                {
+                    label: 'Скользящая средняя (окно 3)',
+                    data: yData1,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    pointRadius: 1,
+                    backgroundColor: '#ffc671',
+                    borderColor: '#ff8000'
+                },
+                {
+                    label: 'Скользящая средняя (окно 4, без центрирования)',
+                    data: yData2,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    backgroundColor: '#c6ff71',
+                    borderColor: '#00ff12',
+                    pointRadius: 1
+                },
+                {
+                    label: 'Скользящая средняя (окно 4, с центрированием)',
+                    data: yData3,
+                    pointStyle: 'none',
+                    fill: false,
+                    borderWidth: 1,
+                    borderColor: '#0022ff',
+                    backgroundColor: '#71c6ff',
+                    pointRadius: 1
+                }]
+        }
+        let options = {
+            plugins: {
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true,  // Включение зума при использовании колеса мыши
+                        },
+                        pinch: {
+                            enabled: true,  // Включение зума при использовании мультитач-жестов
+                        },
+                        mode: 'xy',  // Включение зума по осям X и Y
+                    },
+                    pan: {
+                        enabled: true,  // Включение панорамирования
+                        mode: 'xy',  // Включение панорамирования по осям X и Y
+                    },
+                    limits: {
+                        x: {  // Ограничение по оси X
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                        y: {  // Ограничение по оси Y
+                            min: 'original',  // Минимальное значение - первоначальное
+                            max: 'original'  // Максимальное значение - первоначальное
+                        },
+                    },
+                },
+
+
+            },
+
+
+            title: {
+                display: true,
+                text: 'Скользящие средние',
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                },
+                y: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                }
+            }
+        }
+
+        let config = {
+            type: 'line',
+            data: data,
+            options: options
+        }
+
+        return new Chart(context, config);
+
+    }
+  </script>
+</body>
+</html>
