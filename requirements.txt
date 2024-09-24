@@ -1,4 +1,4 @@
-Django~=4.0.8
+Django>4.0.8
 yfinance~=0.2.18
 plotly~=5.14.1
 matplotlib~=3.6.2
